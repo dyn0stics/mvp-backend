@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
         final String sAddress = aWallet.getAddress();
 
         userProfile.setPrivateKey(sPrivatekeyInHex);
-        userProfile.setAddress(sAddress);
+        userProfile.setAddress("0x" + sAddress);
         return userProfile;
     }
 
