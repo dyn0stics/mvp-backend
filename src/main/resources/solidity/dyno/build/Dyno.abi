@@ -23,14 +23,14 @@
 		"inputs": [
 			{
 				"name": "username",
-				"type": "bytes16"
+				"type": "bytes32"
 			}
 		],
-		"name": "getIpfsHashByUsername",
+		"name": "getAddressByUsername",
 		"outputs": [
 			{
-				"name": "ipfsHash",
-				"type": "bytes"
+				"name": "userAddress",
+				"type": "address"
 			}
 		],
 		"payable": false,
@@ -49,26 +49,7 @@
 		"outputs": [
 			{
 				"name": "username",
-				"type": "bytes16"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [
-			{
-				"name": "username",
-				"type": "bytes16"
-			}
-		],
-		"name": "usernameTaken",
-		"outputs": [
-			{
-				"name": "takenIndeed",
-				"type": "bool"
+				"type": "bytes32"
 			}
 		],
 		"payable": false,
@@ -114,60 +95,18 @@
 		"type": "function"
 	},
 	{
-		"constant": false,
+		"constant": true,
 		"inputs": [
 			{
 				"name": "username",
-				"type": "bytes16"
-			},
+				"type": "bytes32"
+			}
+		],
+		"name": "getIpfsHashByUsername",
+		"outputs": [
 			{
 				"name": "ipfsHash",
 				"type": "bytes"
-			}
-		],
-		"name": "createUser",
-		"outputs": [
-			{
-				"name": "success",
-				"type": "bool"
-			}
-		],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [
-			{
-				"name": "username",
-				"type": "bytes16"
-			}
-		],
-		"name": "getIndexByUsername",
-		"outputs": [
-			{
-				"name": "index",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [
-			{
-				"name": "username",
-				"type": "bytes16"
-			}
-		],
-		"name": "getAddressByUsername",
-		"outputs": [
-			{
-				"name": "userAddress",
-				"type": "address"
 			}
 		],
 		"payable": false,
@@ -190,7 +129,7 @@
 			},
 			{
 				"name": "username",
-				"type": "bytes16"
+				"type": "bytes32"
 			},
 			{
 				"name": "ipfsHash",
@@ -206,22 +145,56 @@
 		"inputs": [
 			{
 				"name": "username",
-				"type": "bytes16"
+				"type": "bytes32"
 			}
 		],
-		"name": "getUserByUsername",
+		"name": "usernameTaken",
 		"outputs": [
 			{
-				"name": "index",
-				"type": "uint256"
-			},
+				"name": "takenIndeed",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
 			{
-				"name": "userAddress",
-				"type": "address"
+				"name": "username",
+				"type": "bytes32"
 			},
 			{
 				"name": "ipfsHash",
 				"type": "bytes"
+			}
+		],
+		"name": "createUser",
+		"outputs": [
+			{
+				"name": "success",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "username",
+				"type": "bytes32"
+			}
+		],
+		"name": "getIndexByUsername",
+		"outputs": [
+			{
+				"name": "index",
+				"type": "uint256"
 			}
 		],
 		"payable": false,
@@ -311,7 +284,34 @@
 		"outputs": [
 			{
 				"name": "username",
-				"type": "bytes16"
+				"type": "bytes32"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "username",
+				"type": "bytes32"
+			}
+		],
+		"name": "getUserByUsername",
+		"outputs": [
+			{
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"name": "userAddress",
+				"type": "address"
+			},
+			{
+				"name": "ipfsHash",
+				"type": "bytes"
 			}
 		],
 		"payable": false,
@@ -334,7 +334,7 @@
 			},
 			{
 				"name": "username",
-				"type": "bytes16"
+				"type": "bytes32"
 			},
 			{
 				"name": "ipfsHash",
