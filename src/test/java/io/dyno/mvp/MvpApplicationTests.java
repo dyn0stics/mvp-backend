@@ -23,13 +23,22 @@ public class MvpApplicationTests {
     private static final Logger log = LoggerFactory.getLogger(MvpApplicationTests.class);
 
     private String NODE_URL = "http://127.0.0.1:7545";
-    final String CONTRACT_ADDRESS = "0x501dbf48d1e29179e395dbaa8896d9ff0bacbff8";
+    final String CONTRACT_ADDRESS = "0xf76fba4d55300e1144cf58df49d6f8e656d42959";
+    final String USER_PK = "c28463ee0cb84ffdabb1edabf10d24497d7e3e562657d21ac64f1855fb1a6d6a";
+
+    @Test
+    public void deployContract() throws Exception {
+        final Web3j web3j = Web3j.build(new HttpService(
+                NODE_URL));
+        final Credentials credentials = Credentials.create(USER_PK);
+        final Dyno dyno = Dyno.deploy(web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975")).send();
+        log.info("Contract deployed at: " + dyno.getContractAddress());
+    }
 
     @Test
     public void transferFunds() throws Exception {
         final Web3j web3j = Web3j.build(new HttpService(
                 NODE_URL));
-        final String USER_PK = "3da1641b555265f0589c7f30b4f32ec316498ffcb4bf72d616f8439031c3da7d";
         final Credentials credentials = Credentials.create(USER_PK);
         TransactionReceipt transactionReceipt = Transfer.sendFunds(web3j, credentials, "0x8316c49dcdcf7912d7494f1964c60924f7d74114", BigDecimal.valueOf(0.001), Convert.Unit.ETHER).send();
     }
@@ -38,7 +47,6 @@ public class MvpApplicationTests {
     public void getUsernameByAddress() throws Exception {
         final Web3j web3j = Web3j.build(new HttpService(
                 NODE_URL));
-        final String USER_PK = "aa0f99731ec0ee728888b64407f2269145a87551031d2d001bc1fefa6b4d087d";
         final Credentials credentials = Credentials.create(USER_PK);
         final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"));
 
@@ -51,7 +59,6 @@ public class MvpApplicationTests {
     public void createUserContract() throws Exception {
         final Web3j web3j = Web3j.build(new HttpService(
                 NODE_URL));
-        final String USER_PK = "0bce4acc7746168cf69f30b2d443b5d6594f41875b1e49ebfe5b63b0d5cf26b3";
         final Credentials credentials = Credentials.create(USER_PK);
         log.info("Address: " + credentials.getAddress());
         EthGetBalance ethGetBalance = web3j
@@ -63,7 +70,6 @@ public class MvpApplicationTests {
         contract.createUser(stringToBytes32("dyno").getValue(), stringToBytes32("dyno").getValue()).send();
         log.info("Number of users: " + contract.getUserCount().send().intValue());
     }
-
 
 
     public static Bytes32 stringToBytes32(String string) {

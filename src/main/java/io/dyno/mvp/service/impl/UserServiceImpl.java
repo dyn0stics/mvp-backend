@@ -14,7 +14,12 @@ import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.http.HttpService;
+import org.web3j.tx.Transfer;
+import org.web3j.utils.Convert;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.UUID;
 
@@ -27,6 +32,8 @@ public class UserServiceImpl implements UserService {
     Web3j web3j;
     @Value("${dyno.contract.address}")
     private String CONTRACT_ADDRESS;
+    @Value("${dyno.contract.fundsAccount}")
+    private String TEST_ACCOUNT_PK;
 
     @Override
     public UserProfile registerUser(String username) throws Exception {
@@ -49,6 +56,10 @@ public class UserServiceImpl implements UserService {
         EthGetBalance ethGetBalance = web3j
                 .ethGetBalance(credentials.getAddress(), DefaultBlockParameterName.LATEST)
                 .send();
+        // Transfer 0.001 ETH to new address - Test purposes
+        final Credentials fundsAccount = Credentials.create(TEST_ACCOUNT_PK);
+        Transfer.sendFunds(web3j, fundsAccount, credentials.getAddress(), BigDecimal.valueOf(1), Convert.Unit.ETHER).send();
+        // Test method END
         log.info("Balance: " + ethGetBalance.getBalance());
         final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"));
         contract.createUser(stringToBytes32(userProfile.getUsername()).getValue(), stringToBytes32("not-available").getValue()).send();
