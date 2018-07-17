@@ -9,7 +9,6 @@ import io.dyno.mvp.service.UserService;
 import io.ipfs.api.IPFS;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
-import io.ipfs.multihash.Multihash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +19,13 @@ import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -39,7 +38,7 @@ public class UserServiceImpl implements UserService {
     @Value("${dyno.contract.address}")
     private String CONTRACT_ADDRESS;
     @Value("${dyno.contract.fundsAccount}")
-    private String TEST_ACCOUNT_PK;
+    private String FUNDS_ACCOUNT;
     @Autowired
     IPFS ipfs;
 
@@ -60,7 +59,7 @@ public class UserServiceImpl implements UserService {
         final Credentials credentials = Credentials.create(userProfile.getPrivateKey());
         log.info("Address: " + credentials.getAddress());
         // Transfer 1 ETH to new address - Test purposes
-        final Credentials fundsAccount = Credentials.create(TEST_ACCOUNT_PK);
+        final Credentials fundsAccount = Credentials.create(FUNDS_ACCOUNT);
         Transfer.sendFunds(web3j, fundsAccount, credentials.getAddress(), BigDecimal.valueOf(1), Convert.Unit.ETHER).send();
         // Test method END
 
@@ -74,7 +73,7 @@ public class UserServiceImpl implements UserService {
                 .send();
         log.info("Balance: " + ethGetBalance.getBalance());
         final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"));
-        contract.createUser(stringToBytes32(userProfile.getUsername()).getValue(), stringToBytes32("not-available").getValue()).send();
+        contract.createUser(stringToBytes32(userProfile.getUsername()).getValue(), userProfile.getIpfsHash().getBytes()).send();
         log.info("Profile created for address " + credentials.getAddress() + " username " + userProfile.getUsername());
         return userProfile;
     }
@@ -83,6 +82,27 @@ public class UserServiceImpl implements UserService {
     public UserProfile loginUser(String privateKey) throws Exception {
         final UserProfile userProfile = new UserProfile();
         return userProfile;
+    }
+
+    @Override
+    public List<UserProfile> doSearch(String param) throws Exception {
+        final Credentials credentials = Credentials.create(FUNDS_ACCOUNT);
+        final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"));
+        final BigInteger nrOfUsers = contract.getUserCount().send();
+        log.info("Number of users detected: " + nrOfUsers);
+        List<UserProfile> userProfiles = new ArrayList<>();
+        for (BigInteger bi = BigInteger.valueOf(0);
+             nrOfUsers.compareTo(bi) > 0;
+             bi = bi.add(BigInteger.ONE)) {
+            log.info("Fetch user index: " + bi);
+            final UserProfile profile = new UserProfile();
+            profile.setAddress(contract.getAddressByIndex(bi).send());
+            profile.setIpfsHash(new String(contract.getIpfsHashByIndex(bi).send()));
+            profile.setUsername(new String(contract.getUsernameByIndex(bi).send()));
+            log.info("Fetch user complete: " + profile.getAddress() + " " + profile.getIpfsHash());
+            userProfiles.add(profile);
+        }
+        return userProfiles;
     }
 
     private static Bytes32 stringToBytes32(String string) {

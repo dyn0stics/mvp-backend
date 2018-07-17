@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.List;
+
 @Controller
 @CrossOrigin
 public class SystemController {
@@ -42,6 +44,12 @@ public class SystemController {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @RequestMapping(value = "/search")
+    @ResponseBody
+    public List<UserProfile> search() throws Exception {
+        return userService.doSearch("test");
     }
 
 }
