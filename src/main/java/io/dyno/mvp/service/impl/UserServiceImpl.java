@@ -1,9 +1,15 @@
 package io.dyno.mvp.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dyno.mvp.contracts.Dyno;
 import io.dyno.mvp.controller.SystemController;
 import io.dyno.mvp.model.UserProfile;
 import io.dyno.mvp.service.UserService;
+import io.ipfs.api.IPFS;
+import io.ipfs.api.MerkleNode;
+import io.ipfs.api.NamedStreamable;
+import io.ipfs.multihash.Multihash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,13 +40,13 @@ public class UserServiceImpl implements UserService {
     private String CONTRACT_ADDRESS;
     @Value("${dyno.contract.fundsAccount}")
     private String TEST_ACCOUNT_PK;
+    @Autowired
+    IPFS ipfs;
 
     @Override
     public UserProfile registerUser(String username) throws Exception {
         final UserProfile userProfile = new UserProfile();
         userProfile.setUsername(username);
-        userProfile.setIpfsHash("not-available");
-
         final String seed = UUID.randomUUID().toString();
         final ECKeyPair ecKeyPair = Keys.createEcKeyPair();
         final BigInteger privateKeyInDec = ecKeyPair.getPrivateKey();
@@ -53,17 +59,29 @@ public class UserServiceImpl implements UserService {
 
         final Credentials credentials = Credentials.create(userProfile.getPrivateKey());
         log.info("Address: " + credentials.getAddress());
-        EthGetBalance ethGetBalance = web3j
-                .ethGetBalance(credentials.getAddress(), DefaultBlockParameterName.LATEST)
-                .send();
-        // Transfer 0.001 ETH to new address - Test purposes
+        // Transfer 1 ETH to new address - Test purposes
         final Credentials fundsAccount = Credentials.create(TEST_ACCOUNT_PK);
         Transfer.sendFunds(web3j, fundsAccount, credentials.getAddress(), BigDecimal.valueOf(1), Convert.Unit.ETHER).send();
         // Test method END
+
+        final NamedStreamable.ByteArrayWrapper file = new NamedStreamable.ByteArrayWrapper("data", profile2Json(userProfile).getBytes());
+        final MerkleNode addResult = ipfs.add(file).get(0);
+        log.info("Saved IPFS hash: " + addResult.hash.toBase58());
+        userProfile.setIpfsHash(addResult.hash.toBase58());
+
+        final EthGetBalance ethGetBalance = web3j
+                .ethGetBalance(credentials.getAddress(), DefaultBlockParameterName.LATEST)
+                .send();
         log.info("Balance: " + ethGetBalance.getBalance());
         final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"));
         contract.createUser(stringToBytes32(userProfile.getUsername()).getValue(), stringToBytes32("not-available").getValue()).send();
         log.info("Profile created for address " + credentials.getAddress() + " username " + userProfile.getUsername());
+        return userProfile;
+    }
+
+    @Override
+    public UserProfile loginUser(String privateKey) throws Exception {
+        final UserProfile userProfile = new UserProfile();
         return userProfile;
     }
 
@@ -74,4 +92,8 @@ public class UserServiceImpl implements UserService {
         return new Bytes32(byteValueLen32);
     }
 
+    private String profile2Json(final UserProfile userProfile) throws JsonProcessingException {
+        final ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(userProfile);
+    }
 }

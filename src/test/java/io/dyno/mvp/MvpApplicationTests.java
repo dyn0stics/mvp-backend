@@ -1,6 +1,14 @@
 package io.dyno.mvp;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dyno.mvp.contracts.Dyno;
+import io.dyno.mvp.model.UserData;
+import io.dyno.mvp.model.UserProfile;
+import io.ipfs.api.IPFS;
+import io.ipfs.api.MerkleNode;
+import io.ipfs.api.NamedStreamable;
+import io.ipfs.multihash.Multihash;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +22,13 @@ import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 public class MvpApplicationTests {
 
@@ -71,11 +83,41 @@ public class MvpApplicationTests {
         log.info("Number of users: " + contract.getUserCount().send().intValue());
     }
 
+    @Test
+    public void ipfsConnectTest() throws IOException {
+        final IPFS ipfs = new IPFS("/ip4/127.0.0.1/tcp/5001");
+        List<Multihash> multihashes = ipfs.refs.local();
+        log.info("IPFS hashes " + Arrays.toString(multihashes.toArray()));
+        NamedStreamable.ByteArrayWrapper file = new NamedStreamable.ByteArrayWrapper("data", profile2Json(generateRandomUser()).getBytes());
+        MerkleNode addResult = ipfs.add(file).get(0);
+        log.info("Saved IPFS hash: " + addResult.hash.toBase58());
+        Multihash filePointer = Multihash.fromBase58(addResult.hash.toBase58());
+        byte[] fileContents = ipfs.cat(filePointer);
+        log.info("Retreived: " + new String(fileContents));
+    }
 
-    public static Bytes32 stringToBytes32(String string) {
-        byte[] byteValue = string.getBytes();
+    private static Bytes32 stringToBytes32(final String str) {
+        byte[] byteValue = str.getBytes();
         byte[] byteValueLen32 = new byte[32];
         System.arraycopy(byteValue, 0, byteValueLen32, 0, byteValue.length);
         return new Bytes32(byteValueLen32);
+    }
+
+    private UserProfile generateRandomUser() {
+        final UserProfile profile = new UserProfile();
+        profile.setUsername(UUID.randomUUID().toString());
+        final UserData data = new UserData();
+        data.setAge("21");
+        data.setCountry("Germany");
+        data.setGender("male");
+        data.setWeight("80");
+        data.setWorkoutData(UUID.randomUUID().toString());
+        profile.setData(data);
+        return profile;
+    }
+
+    private String profile2Json(final UserProfile userProfile) throws JsonProcessingException {
+        final ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(userProfile);
     }
 }

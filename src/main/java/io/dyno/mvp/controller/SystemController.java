@@ -32,4 +32,16 @@ public class SystemController {
         return null;
     }
 
+    @RequestMapping(value = "/user/login")
+    @ResponseBody
+    public UserProfile userLogin(
+            @RequestParam(name = "pk") final String pk) {
+        try {
+            //return userService.registerUser(username);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }

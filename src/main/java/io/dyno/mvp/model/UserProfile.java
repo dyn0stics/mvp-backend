@@ -1,11 +1,14 @@
 package io.dyno.mvp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class UserProfile {
 
     private String username;
     private String privateKey;
     private String ipfsHash;
     private String address;
+    private UserData data;
 
     public String getUsername() {
         return username;
@@ -37,6 +40,14 @@ public class UserProfile {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public UserData getData() {
+        return data;
+    }
+
+    public void setData(UserData data) {
+        this.data = data;
     }
 
     @Override
