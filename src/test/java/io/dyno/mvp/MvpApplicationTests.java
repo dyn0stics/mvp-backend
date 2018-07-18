@@ -9,13 +9,9 @@ import io.ipfs.api.IPFS;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
 import io.ipfs.multihash.Multihash;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.IESCipher;
-import org.bouncycastle.jce.spec.IEKeySpec;
-import org.bouncycastle.jce.spec.IESParameterSpec;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
@@ -27,13 +23,14 @@ import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
 
-import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 public class MvpApplicationTests {
 
@@ -104,7 +101,7 @@ public class MvpApplicationTests {
 
     @Test
     public void encryptionTest() throws NoSuchPaddingException, NoSuchAlgorithmException {
-        final String dataString = "TEST";
+     /*   final String dataString = "TEST";
         final String privateKey = "441ef9e68cd2960004213a76600e14c69de9a5c2e8d480bfe0fad45b9bd0c972";
         final byte[] base64String = Base64.getEncoder().encode(dataString.getBytes());
         log.info("Base64: " + new String(base64String));
@@ -117,7 +114,7 @@ public class MvpApplicationTests {
         byte[]  d = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
         byte[]  e = new byte[] { 8, 7, 6, 5, 4, 3, 2, 1 };
         IESParameterSpec param = new IESParameterSpec(d, e, 256);
-
+        */
         // encrypt the plaintext using the public key
        // acipher.init(Cipher.ENCRYPT_MODE, new IEKeySpec(Hex.toHexString(privateKey.getBytes()), privateToPublic(Hex.toHexString(privateKey.getBytes())), param);
        // final String encrypted =  acipher.doFinal();
