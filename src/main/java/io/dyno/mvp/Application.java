@@ -7,6 +7,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.web3j.abi.datatypes.generated.Bytes16;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @SpringBootApplication
 @PropertySource("application.properties")
+@EnableWebMvc
 @ComponentScan
 public class Application {
 

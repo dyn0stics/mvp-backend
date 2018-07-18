@@ -6,15 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
-@CrossOrigin
+@RestController
 public class SystemController {
 
     private static final Logger log = LoggerFactory.getLogger(SystemController.class);
@@ -24,6 +20,7 @@ public class SystemController {
 
     @RequestMapping(value = "/user/register")
     @ResponseBody
+    @CrossOrigin
     public UserProfile userRegister(
             @RequestParam(name = "username") final String username) {
         try {
@@ -36,6 +33,7 @@ public class SystemController {
 
     @RequestMapping(value = "/user/login")
     @ResponseBody
+    @CrossOrigin
     public UserProfile userLogin(
             @RequestParam(name = "pk") final String pk) {
         try {
@@ -48,6 +46,7 @@ public class SystemController {
 
     @RequestMapping(value = "/search")
     @ResponseBody
+    @CrossOrigin
     public List<UserProfile> search() throws Exception {
         return userService.doSearch("test");
     }

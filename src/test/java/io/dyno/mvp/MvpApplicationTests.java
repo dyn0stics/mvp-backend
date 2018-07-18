@@ -120,7 +120,7 @@ public class MvpApplicationTests {
 
         // encrypt the plaintext using the public key
        // acipher.init(Cipher.ENCRYPT_MODE, new IEKeySpec(Hex.toHexString(privateKey.getBytes()), privateToPublic(Hex.toHexString(privateKey.getBytes())), param);
-        final String encrypted =  acipher.doFinal();
+       // final String encrypted =  acipher.doFinal();
     }
 
     private static Bytes32 stringToBytes32(final String str) {

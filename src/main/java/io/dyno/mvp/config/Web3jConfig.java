@@ -1,6 +1,5 @@
 package io.dyno.mvp.config;
 
-import io.dyno.mvp.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
