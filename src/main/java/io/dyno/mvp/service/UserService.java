@@ -8,7 +8,7 @@ public interface UserService {
 
     UserProfile registerUser(final String username) throws Exception;
 
-    UserProfile loginUser(final String privateKey) throws Exception;
+    UserProfile getUser(final String privateKey) throws Exception;
 
     List<UserProfile> doSearch(final String param) throws Exception;
 }

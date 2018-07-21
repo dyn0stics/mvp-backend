@@ -77,7 +77,7 @@ public class UserServiceImpl implements UserService {
         userProfile.setData(data);
 
 
-        byte[] payload = data.getWorkoutData().getBytes();
+        final byte[] payload = data.getWorkoutData().getBytes();
         final ECKey ecKey = ECKey.fromPrivate(ecKeyPair.getPrivateKey());
         final ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
         byte[] cipher = new byte[0];
@@ -107,7 +107,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserProfile loginUser(String privateKey) throws Exception {
+    public UserProfile getUser(String privateKey) throws Exception {
         final UserProfile userProfile = new UserProfile();
         return userProfile;
     }

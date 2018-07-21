@@ -22,7 +22,11 @@ public class SystemController {
     @ResponseBody
     @CrossOrigin
     public UserProfile userRegister(
-            @RequestParam(name = "username") final String username) {
+            @RequestParam(name = "username") final String username,
+            @RequestParam(name = "age") final String age,
+            @RequestParam(name = "weight") final String weight,
+            @RequestParam(name = "gender") final String gender,
+            @RequestParam(name = "country") final String country) {
         try {
             return userService.registerUser(username);
         } catch (Exception e) {

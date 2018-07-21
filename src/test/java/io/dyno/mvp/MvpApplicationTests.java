@@ -115,6 +115,10 @@ public class MvpApplicationTests {
         Multihash filePointer = Multihash.fromBase58(addResult.hash.toBase58());
         byte[] fileContents = ipfs.cat(filePointer);
         log.info("Retreived: " + new String(fileContents));
+
+        Multihash filePointer2 = Multihash.fromBase58("QmekPMJAts4MwAoWk6AQwyhgcsAQz7tv58hfhXgxRnCWZB");
+        byte[] fileContents2 = ipfs.cat(filePointer2);
+        log.info("Retreived: " + new String(fileContents2));
     }
 
 
