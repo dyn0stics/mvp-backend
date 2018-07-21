@@ -4,13 +4,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dyno.mvp.contracts.Dyno;
 import io.dyno.mvp.controller.SystemController;
+import io.dyno.mvp.crypto.ECIESCoder;
+import io.dyno.mvp.crypto.ECKey;
+import io.dyno.mvp.model.UserData;
 import io.dyno.mvp.model.UserProfile;
 import io.dyno.mvp.service.UserService;
 import io.ipfs.api.IPFS;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.math.ec.ECPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,11 +27,11 @@ import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -61,7 +66,30 @@ public class UserServiceImpl implements UserService {
         // Transfer 1 ETH to new address - Test purposes
         final Credentials fundsAccount = Credentials.create(FUNDS_ACCOUNT);
         Transfer.sendFunds(web3j, fundsAccount, credentials.getAddress(), BigDecimal.valueOf(1), Convert.Unit.ETHER).send();
-        // Test method END
+        final UserData data = new UserData();
+        data.setAge("21");
+        data.setCountry("Germany");
+        data.setGender("male");
+        data.setWeight("80");
+        final String workoutData = getFile("data/diagnoses.json");
+        log.info("Workout data:" + workoutData);
+        data.setWorkoutData(workoutData);
+        userProfile.setData(data);
+
+
+        byte[] payload = data.getWorkoutData().getBytes();
+        final ECKey ecKey = ECKey.fromPrivate(ecKeyPair.getPrivateKey());
+        final ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
+        byte[] cipher = new byte[0];
+        try {
+            cipher = ECIESCoder.encrypt(pubKeyPoint, payload);
+        } catch (Throwable e) {
+            log.error("Error during encryption: " + e.getMessage());
+        }
+
+        log.info("Workout data encrypted: " + Hex.toHexString(cipher));
+        data.setWorkoutData(Hex.toHexString(cipher));
+        // Test method END (set initial account balance and 1 workout record)
 
         final NamedStreamable.ByteArrayWrapper file = new NamedStreamable.ByteArrayWrapper("data", profile2Json(userProfile).getBytes());
         final MerkleNode addResult = ipfs.add(file).get(0);
@@ -115,5 +143,30 @@ public class UserServiceImpl implements UserService {
     private String profile2Json(final UserProfile userProfile) throws JsonProcessingException {
         final ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(userProfile);
+    }
+
+    private String getFile(String fileName) {
+
+        StringBuilder result = new StringBuilder("");
+
+        //Get file from resources folder
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource(fileName).getFile());
+
+        try (Scanner scanner = new Scanner(file)) {
+
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                result.append(line).append("\n");
+            }
+
+            scanner.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return result.toString();
+
     }
 }
