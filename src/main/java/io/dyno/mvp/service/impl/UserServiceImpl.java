@@ -12,6 +12,7 @@ import io.dyno.mvp.service.UserService;
 import io.ipfs.api.IPFS;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
+import io.ipfs.multihash.Multihash;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,8 @@ public class UserServiceImpl implements UserService {
     private String FUNDS_ACCOUNT;
     @Autowired
     IPFS ipfs;
+    private final String GAS_PRICE = "20000000000";
+    private final String GAS_LIMIT = "6721975";
 
     @Override
     public UserProfile registerUser(String username) throws Exception {
@@ -95,27 +98,32 @@ public class UserServiceImpl implements UserService {
         final MerkleNode addResult = ipfs.add(file).get(0);
         log.info("Saved IPFS hash: " + addResult.hash.toBase58());
         userProfile.setIpfsHash(addResult.hash.toBase58());
-
         final EthGetBalance ethGetBalance = web3j
                 .ethGetBalance(credentials.getAddress(), DefaultBlockParameterName.LATEST)
                 .send();
         log.info("Balance: " + ethGetBalance.getBalance());
-        final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"));
+        final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
         contract.createUser(stringToBytes32(userProfile.getUsername()).getValue(), userProfile.getIpfsHash().getBytes()).send();
         log.info("Profile created for address " + credentials.getAddress() + " username " + userProfile.getUsername());
         return userProfile;
     }
 
     @Override
-    public UserProfile getUser(String privateKey) throws Exception {
-        final UserProfile userProfile = new UserProfile();
-        return userProfile;
+    public UserProfile getUser(final String privateKey) throws Exception {
+        final Credentials credentials = Credentials.create(privateKey);
+        final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
+        final String ipfsHash = new String(contract.getIpfsHashByAddress(credentials.getAddress()).send());
+        final Multihash filePointer = Multihash.fromBase58(ipfsHash);
+        final byte[] fileContents = ipfs.cat(filePointer);
+        log.info("Retreived: " + new String(fileContents));
+        final ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(new String(fileContents), UserProfile.class);
     }
 
     @Override
     public List<UserProfile> doSearch(String param) throws Exception {
         final Credentials credentials = Credentials.create(FUNDS_ACCOUNT);
-        final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"));
+        final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
         final BigInteger nrOfUsers = contract.getUserCount().send();
         log.info("Number of users detected: " + nrOfUsers);
         List<UserProfile> userProfiles = new ArrayList<>();
@@ -145,27 +153,18 @@ public class UserServiceImpl implements UserService {
         return mapper.writeValueAsString(userProfile);
     }
 
-    private String getFile(String fileName) {
-
-        StringBuilder result = new StringBuilder("");
-
-        //Get file from resources folder
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource(fileName).getFile());
-
+    private String getFile(final String fileName) {
+        final StringBuilder result = new StringBuilder("");
+        final ClassLoader classLoader = getClass().getClassLoader();
+        final File file = new File(classLoader.getResource(fileName).getFile());
         try (Scanner scanner = new Scanner(file)) {
-
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 result.append(line).append("\n");
             }
-
-            scanner.close();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return result.toString();
 
     }

@@ -23,10 +23,10 @@ public class SystemController {
     @CrossOrigin
     public UserProfile userRegister(
             @RequestParam(name = "username") final String username,
-            @RequestParam(name = "age") final String age,
-            @RequestParam(name = "weight") final String weight,
-            @RequestParam(name = "gender") final String gender,
-            @RequestParam(name = "country") final String country) {
+            @RequestParam(name = "age", required = false) final String age,
+            @RequestParam(name = "weight", required = false) final String weight,
+            @RequestParam(name = "gender", required = false) final String gender,
+            @RequestParam(name = "country", required = false) final String country) {
         try {
             return userService.registerUser(username);
         } catch (Exception e) {
@@ -35,13 +35,13 @@ public class SystemController {
         return null;
     }
 
-    @RequestMapping(value = "/user/login")
+    @RequestMapping(value = "/user/profile")
     @ResponseBody
     @CrossOrigin
     public UserProfile userLogin(
             @RequestParam(name = "pk") final String pk) {
         try {
-            //return userService.registerUser(username);
+            return userService.getUser(pk);
         } catch (Exception e) {
             e.printStackTrace();
         }
