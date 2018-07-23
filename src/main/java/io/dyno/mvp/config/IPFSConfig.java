@@ -18,7 +18,12 @@ public class IPFSConfig {
 
     @Bean(name = "ipfs")
     public IPFS ipfs() {
-        return new IPFS("/ip4/127.0.0.1/tcp/5001");
+        try {
+            return new IPFS("/ip4/127.0.0.1/tcp/5001");
+        } catch (Exception e) {
+            log.error(e.getLocalizedMessage());
+            return null;
+        }
     }
 
 }

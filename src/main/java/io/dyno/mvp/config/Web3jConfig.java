@@ -20,11 +20,16 @@ public class Web3jConfig {
 
     @Bean(name = "web3j")
     Web3j web3j() throws IOException {
-        final Web3j web3j = Web3j.build(new HttpService(
-                NODE_URL));
-        log.info("Connected to Ethereum client version: "
-                + web3j.web3ClientVersion().send().getWeb3ClientVersion());
-        return web3j;
+        try {
+            final Web3j web3j = Web3j.build(new HttpService(
+                    NODE_URL));
+            log.info("Connected to Ethereum client version: "
+                    + web3j.web3ClientVersion().send().getWeb3ClientVersion());
+            return web3j;
+        } catch (Exception e) {
+            log.error(e.getLocalizedMessage());
+        }
+        return null;
     }
 
 }
