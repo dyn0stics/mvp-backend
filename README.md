@@ -1,14 +1,8 @@
 # mvp-backend
 MVP Backend
 
-
-Dev requirements:
-
-1) npm install -g solc
-
-
-Smart contract java Wrapper generator:
-1) solc
+Run:
+java -jar mvp-0.0.1-SNAPSHOT.jar --spring.profiles.active=demo
 
 IPFS Setup:
 1) wget https://dist.ipfs.io/go-ipfs/v0.4.16/go-ipfs_v0.4.16_linux-amd64.tar.gz

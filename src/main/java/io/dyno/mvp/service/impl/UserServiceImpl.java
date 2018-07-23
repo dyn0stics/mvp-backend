@@ -45,6 +45,8 @@ public class UserServiceImpl implements UserService {
     private String CONTRACT_ADDRESS;
     @Value("${dyno.contract.fundsAccount}")
     private String FUNDS_ACCOUNT;
+    @Value("${ipfs.node.ip}")
+    private String NODE_IP;
     @Autowired
     IPFS ipfs;
     private final String GAS_PRICE = "20000000000";
@@ -115,9 +117,21 @@ public class UserServiceImpl implements UserService {
         final String ipfsHash = new String(contract.getIpfsHashByAddress(credentials.getAddress()).send());
         final Multihash filePointer = Multihash.fromBase58(ipfsHash);
         final byte[] fileContents = ipfs.cat(filePointer);
-        log.info("Retreived: " + new String(fileContents));
+        log.info("Retreived: " + new String(fileContents).substring(0, 100));
         final ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(new String(fileContents), UserProfile.class);
+        final UserProfile profile = objectMapper.readValue(new String(fileContents), UserProfile.class);
+        final BigInteger privKey = new BigInteger(privateKey, 16);
+        byte[] payload = new byte[0];
+        try {
+            log.info("Decrypting ..." + profile.getData().getWorkoutData().substring(0, 100));
+            payload = ECIESCoder.decrypt(privKey, Hex.decode(profile.getData().getWorkoutData()));
+        } catch (Throwable e) {
+            log.error(e.getMessage());
+            e.printStackTrace();
+        }
+        profile.getData().setWorkoutData(new String(payload)); // show decrypted data only for users with PK
+        profile.setIpfsHash(NODE_IP + ":5001/ipfs/" + ipfsHash);
+        return profile;
     }
 
     @Override
