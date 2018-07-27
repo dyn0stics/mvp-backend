@@ -130,7 +130,7 @@ public class UserServiceImpl implements UserService {
             e.printStackTrace();
         }
         profile.getData().setWorkoutData(new String(payload)); // show decrypted data only for users with PK
-        profile.setIpfsHash(NODE_IP + ":5001/ipfs/" + ipfsHash);
+        profile.setIpfsHash(NODE_IP + ":8080/ipfs/" + ipfsHash); //http://localhost:8080/ipfs/Qmcr5S89hSc5GLn6TJyHR2KCZ8DWucfSaHkAA6U8UEsMSW
         return profile;
     }
 
