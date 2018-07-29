@@ -1,0 +1,12 @@
+[Unit]
+Description=DYNO Backend
+After=network.target
+
+[Service]
+User=root
+Environment=
+ExecStart=/usr/bin/java -jar /root/mvp-backend/target/mvp-0.0.1-SNAPSHOT.jar --spring.profiles.active=demo --server.port=8181 --ipfs.node.ip=206.189.55.218 --dyno.contract.address=0xf80a9c6ea028802b6914b7647a7b2c644f9b66d9 --dyno.contract.fundsAccount=0xbde96140414412b4ac7855d4ad789be14ee279b19597654f177cec45c67fe714 --logging.file=/root/dyno-api.log
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

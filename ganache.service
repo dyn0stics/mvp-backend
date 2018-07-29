@@ -1,0 +1,12 @@
+[Unit]
+Description=Private Blockchain Service
+After=network.target
+
+[Service]
+User=root
+Environment=
+ExecStart=/usr/local/bin/ganache-cli -p 8545 -h 127.0.0.1 -account_keys_path /root/keys.log
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
