@@ -32,6 +32,8 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 @Service
@@ -76,7 +78,7 @@ public class UserServiceImpl implements UserService {
         data.setCountry("Germany");
         data.setGender("male");
         data.setWeight("80");
-        final String workoutData = getFile("data/diagnoses.json");
+        final String workoutData = readFileAsString("/root/diagnoses.json");
         log.info("Workout data:" + workoutData);
         data.setWorkoutData(workoutData);
         userProfile.setData(data);
@@ -181,5 +183,11 @@ public class UserServiceImpl implements UserService {
         }
         return result.toString();
 
+    }
+
+    public static String readFileAsString(String fileName) throws Exception {
+        String data = "";
+        data = new String(Files.readAllBytes(Paths.get(fileName)));
+        return data;
     }
 }
