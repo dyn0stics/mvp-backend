@@ -49,6 +49,8 @@ public class UserServiceImpl implements UserService {
     private String FUNDS_ACCOUNT;
     @Value("${ipfs.node.ip}")
     private String NODE_IP;
+    @Value("${demo.file}")
+    private String DEMO_FILE;
     @Autowired
     IPFS ipfs;
     private final String GAS_PRICE = "20000000000";
@@ -78,8 +80,8 @@ public class UserServiceImpl implements UserService {
         data.setCountry("Germany");
         data.setGender("male");
         data.setWeight("80");
-        final String workoutData = readFileAsString("/root/diagnoses.json");
-        log.info("Workout data:" + workoutData);
+        final String workoutData = readFileAsString(DEMO_FILE);
+        log.info("Workout data:" + workoutData.substring(100));
         data.setWorkoutData(workoutData);
         userProfile.setData(data);
 
@@ -94,7 +96,7 @@ public class UserServiceImpl implements UserService {
             log.error("Error during encryption: " + e.getMessage());
         }
 
-        log.info("Workout data encrypted: " + Hex.toHexString(cipher));
+        log.info("Workout data encrypted: " + Hex.toHexString(cipher).substring(100));
         data.setWorkoutData(Hex.toHexString(cipher));
         // Test method END (set initial account balance and 1 workout record)
 
