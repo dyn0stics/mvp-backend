@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
         data.setGender("male");
         data.setWeight("80");
         final String workoutData = readFileAsString(DEMO_FILE);
-        log.info("Workout data:" + workoutData.substring(100));
+        log.info("Workout data:" + workoutData.substring(0,100));
         data.setWorkoutData(workoutData);
         userProfile.setData(data);
 
@@ -96,7 +96,7 @@ public class UserServiceImpl implements UserService {
             log.error("Error during encryption: " + e.getMessage());
         }
 
-        log.info("Workout data encrypted: " + Hex.toHexString(cipher).substring(100));
+        log.info("Workout data encrypted: " + Hex.toHexString(cipher).substring(0,100));
         data.setWorkoutData(Hex.toHexString(cipher));
         // Test method END (set initial account balance and 1 workout record)
 
