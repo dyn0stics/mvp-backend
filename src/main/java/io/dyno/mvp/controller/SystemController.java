@@ -27,7 +27,7 @@ public class SystemController {
             @RequestParam(name = "gender", required = false) final String gender,
             @RequestParam(name = "country", required = false) final String country) {
         try {
-            return userService.registerUser(username);
+            return userService.registerUser(username, age, weight, gender, country);
         } catch (Exception e) {
             e.printStackTrace();
         }

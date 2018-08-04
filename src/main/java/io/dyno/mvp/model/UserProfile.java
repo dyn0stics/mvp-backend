@@ -1,6 +1,6 @@
 package io.dyno.mvp.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.List;
 
 public class UserProfile {
 
@@ -9,6 +9,8 @@ public class UserProfile {
     private String ipfsHash;
     private String address;
     private UserData data;
+    private String balance;
+    private List<PurchaseOffer> purchaseOffers;
 
     public String getUsername() {
         return username;
@@ -48,6 +50,22 @@ public class UserProfile {
 
     public void setData(UserData data) {
         this.data = data;
+    }
+
+    public String getBalance() {
+        return balance;
+    }
+
+    public void setBalance(String balance) {
+        this.balance = balance;
+    }
+
+    public List<PurchaseOffer> getPurchaseOffers() {
+        return purchaseOffers;
+    }
+
+    public void setPurchaseOffers(List<PurchaseOffer> purchaseOffers) {
+        this.purchaseOffers = purchaseOffers;
     }
 
     @Override

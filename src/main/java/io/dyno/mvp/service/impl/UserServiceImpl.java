@@ -2,10 +2,12 @@ package io.dyno.mvp.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dyno.mvp.contracts.Dyno;
+import io.dyno.mvp.contracts.DynoMarket;
+import io.dyno.mvp.contracts.DynoToken;
 import io.dyno.mvp.controller.SystemController;
 import io.dyno.mvp.crypto.ECIESCoder;
 import io.dyno.mvp.crypto.ECKey;
+import io.dyno.mvp.model.PurchaseOffer;
 import io.dyno.mvp.model.UserData;
 import io.dyno.mvp.model.UserProfile;
 import io.dyno.mvp.service.UserService;
@@ -25,6 +27,7 @@ import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
+import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
 
@@ -57,7 +60,7 @@ public class UserServiceImpl implements UserService {
     private final String GAS_LIMIT = "6721975";
 
     @Override
-    public UserProfile registerUser(String username) throws Exception {
+    public UserProfile registerUser(String username, String age, String weight, String gender, String country) throws Exception {
         final UserProfile userProfile = new UserProfile();
         userProfile.setUsername(username);
         final String seed = UUID.randomUUID().toString();
@@ -71,21 +74,20 @@ public class UserServiceImpl implements UserService {
         userProfile.setAddress("0x" + sAddress);
 
         final Credentials credentials = Credentials.create(userProfile.getPrivateKey());
+        final DynoMarket contract = DynoMarket.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
         log.info("Address: " + credentials.getAddress());
-        // Transfer 1 ETH to new address - Test purposes
+        final UserData data = new UserData();
+        data.setAge(age);
+        data.setCountry(country);
+        data.setGender(gender);
+        data.setWeight(weight);
+        // DEMO - Transfer 1 ETH to new address - Test purposes
         final Credentials fundsAccount = Credentials.create(FUNDS_ACCOUNT);
         Transfer.sendFunds(web3j, fundsAccount, credentials.getAddress(), BigDecimal.valueOf(1), Convert.Unit.ETHER).send();
-        final UserData data = new UserData();
-        data.setAge("21");
-        data.setCountry("Germany");
-        data.setGender("male");
-        data.setWeight("80");
         final String workoutData = readFileAsString(DEMO_FILE);
-        log.info("Workout data:" + workoutData.substring(0,100));
+        log.info("Workout data:" + workoutData.substring(0, 100));
         data.setWorkoutData(workoutData);
         userProfile.setData(data);
-
-
         final byte[] payload = data.getWorkoutData().getBytes();
         final ECKey ecKey = ECKey.fromPrivate(ecKeyPair.getPrivateKey());
         final ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
@@ -95,10 +97,10 @@ public class UserServiceImpl implements UserService {
         } catch (Throwable e) {
             log.error("Error during encryption: " + e.getMessage());
         }
-
-        log.info("Workout data encrypted: " + Hex.toHexString(cipher).substring(0,100));
+        log.info("Workout data encrypted: " + Hex.toHexString(cipher).substring(0, 100));
         data.setWorkoutData(Hex.toHexString(cipher));
-        // Test method END (set initial account balance and 1 workout record)
+        sendTokens(contract, credentials.getAddress(), BigInteger.valueOf(100L));
+        // DEMO - method END (set initial account balance and 1 workout record)
 
         final NamedStreamable.ByteArrayWrapper file = new NamedStreamable.ByteArrayWrapper("data", profile2Json(userProfile).getBytes());
         final MerkleNode addResult = ipfs.add(file).get(0);
@@ -108,7 +110,6 @@ public class UserServiceImpl implements UserService {
                 .ethGetBalance(credentials.getAddress(), DefaultBlockParameterName.LATEST)
                 .send();
         log.info("Balance: " + ethGetBalance.getBalance());
-        final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
         contract.createUser(stringToBytes32(userProfile.getUsername()).getValue(), userProfile.getIpfsHash().getBytes()).send();
         log.info("Profile created for address " + credentials.getAddress() + " username " + userProfile.getUsername());
         return userProfile;
@@ -117,7 +118,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserProfile getUser(final String privateKey) throws Exception {
         final Credentials credentials = Credentials.create(privateKey);
-        final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
+        final DynoMarket contract = DynoMarket.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
         final String ipfsHash = new String(contract.getIpfsHashByAddress(credentials.getAddress()).send());
         final Multihash filePointer = Multihash.fromBase58(ipfsHash);
         final byte[] fileContents = ipfs.cat(filePointer);
@@ -135,13 +136,15 @@ public class UserServiceImpl implements UserService {
         }
         profile.getData().setWorkoutData(new String(payload)); // show decrypted data only for users with PK
         profile.setIpfsHash(NODE_IP + ":8080/ipfs/" + ipfsHash); //http://localhost:8080/ipfs/Qmcr5S89hSc5GLn6TJyHR2KCZ8DWucfSaHkAA6U8UEsMSW
+        profile.setPurchaseOffers(fetchPurchaseOffersForAddress(contract, profile.getAddress()));
+        profile.setBalance(fetchBalanceForAddress(contract, credentials, profile.getAddress()));
         return profile;
     }
 
     @Override
     public List<UserProfile> doSearch(String param) throws Exception {
         final Credentials credentials = Credentials.create(FUNDS_ACCOUNT);
-        final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
+        final DynoMarket contract = DynoMarket.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
         final BigInteger nrOfUsers = contract.getUserCount().send();
         log.info("Number of users detected: " + nrOfUsers);
         List<UserProfile> userProfiles = new ArrayList<>();
@@ -187,9 +190,36 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    public static String readFileAsString(String fileName) throws Exception {
+    private static String readFileAsString(String fileName) throws Exception {
         String data = "";
         data = new String(Files.readAllBytes(Paths.get(fileName)));
         return data;
+    }
+
+    private List<PurchaseOffer> fetchPurchaseOffersForAddress(final DynoMarket contract, final String address) throws Exception {
+        final BigInteger count = contract.getOffersLength().send();
+        final List<PurchaseOffer> offers = new ArrayList<>();
+        for (BigInteger bi = BigInteger.valueOf(0);
+             count.compareTo(bi) > 0;
+             bi = bi.add(BigInteger.ONE)) {
+            log.info("Fetch offer index: " + bi);
+            final Tuple5 offer = contract.getOfferByIndex(bi).send();
+            if (offer.getValue2().equals(address)) {
+                offers.add(new PurchaseOffer((String) offer.getValue1(), (String) offer.getValue2(), (String) offer.getValue3(), (String) offer.getValue4(), (String) offer.getValue5()));
+            }
+        }
+        log.info("Fetch offer complete.");
+        return offers;
+    }
+
+    private String fetchBalanceForAddress(final DynoMarket contract, final Credentials credentials, final String address) throws Exception {
+        final DynoToken dynoToken = DynoToken.load(contract.currency().send(), web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
+        return dynoToken.balanceOf(address).send().toString();
+    }
+
+    private void sendTokens(final DynoMarket contract, final String address, final BigInteger amount) throws Exception {
+        final Credentials credentials = Credentials.create(FUNDS_ACCOUNT);
+        final DynoToken dynoToken = DynoToken.load(contract.currency().send(), web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
+        dynoToken.transfer(address, amount).send();
     }
 }

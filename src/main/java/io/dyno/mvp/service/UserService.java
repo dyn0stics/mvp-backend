@@ -6,9 +6,9 @@ import java.util.List;
 
 public interface UserService {
 
-    UserProfile registerUser(final String username) throws Exception;
-
     UserProfile getUser(final String privateKey) throws Exception;
 
     List<UserProfile> doSearch(final String param) throws Exception;
+
+    UserProfile registerUser(String username, String age, String weight, String gender, String country) throws Exception;
 }

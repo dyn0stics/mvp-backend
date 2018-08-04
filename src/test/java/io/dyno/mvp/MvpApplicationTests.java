@@ -2,7 +2,7 @@ package io.dyno.mvp;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dyno.mvp.contracts.Dyno;
+import io.dyno.mvp.contracts.DynoMarket;
 import io.dyno.mvp.crypto.ECIESCoder;
 import io.dyno.mvp.crypto.ECKey;
 import io.dyno.mvp.model.UserData;
@@ -56,7 +56,8 @@ public class MvpApplicationTests {
     private static final Logger log = LoggerFactory.getLogger(MvpApplicationTests.class);
 
     private String NODE_URL = "http://127.0.0.1:7545";
-    final String CONTRACT_ADDRESS = "0xf76fba4d55300e1144cf58df49d6f8e656d42959";
+    final String CONTRACT_ADDRESS = "0x27f9534bf05e4d2d2e5037f15646800b38fe10cf";
+    final String TOKEN_ADDRESS = "0x1180c8537e898c27773062e9bdf17cdb47ffe95c";
     final String USER_PK = "c28463ee0cb84ffdabb1edabf10d24497d7e3e562657d21ac64f1855fb1a6d6a";
 
     @Test
@@ -64,7 +65,7 @@ public class MvpApplicationTests {
         final Web3j web3j = Web3j.build(new HttpService(
                 NODE_URL));
         final Credentials credentials = Credentials.create(USER_PK);
-        final Dyno dyno = Dyno.deploy(web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975")).send();
+        final DynoMarket dyno = DynoMarket.deploy(web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"), TOKEN_ADDRESS).send();
         log.info("Contract deployed at: " + dyno.getContractAddress());
     }
 
@@ -81,7 +82,7 @@ public class MvpApplicationTests {
         final Web3j web3j = Web3j.build(new HttpService(
                 NODE_URL));
         final Credentials credentials = Credentials.create(USER_PK);
-        final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"));
+        final DynoMarket contract = DynoMarket.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"));
 
         byte[] username = contract.getUsernameByIndex(new BigInteger("2")).send();
         log.info("Username " + new String(username));
@@ -98,7 +99,7 @@ public class MvpApplicationTests {
                 .ethGetBalance(credentials.getAddress(), DefaultBlockParameterName.LATEST)
                 .send();
         log.info("Balance: " + ethGetBalance.getBalance());
-        final Dyno contract = Dyno.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"));
+        final DynoMarket contract = DynoMarket.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger("20000000000"), new BigInteger("6721975"));
 
         contract.createUser(stringToBytes32("dyno").getValue(), stringToBytes32("dyno").getValue()).send();
         log.info("Number of users: " + contract.getUserCount().send().intValue());
