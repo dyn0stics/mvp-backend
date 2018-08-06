@@ -1,7 +1,10 @@
 package io.dyno.mvp.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dyno.mvp.model.UserProfile;
 import io.dyno.mvp.service.UserService;
+import io.ipfs.api.IPFS;
+import io.ipfs.multihash.Multihash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,8 @@ public class SystemController {
 
     @Autowired
     UserService userService;
+    @Autowired
+    IPFS ipfs;
 
     @RequestMapping(value = "/user/register")
     @ResponseBody
@@ -52,6 +57,17 @@ public class SystemController {
     @CrossOrigin
     public List<UserProfile> search() throws Exception {
         return userService.doSearch("test");
+    }
+
+    @RequestMapping(value = "/ipfs")
+    @ResponseBody
+    @CrossOrigin
+    public String fetchIpfsData(
+            @RequestParam(name = "hash") final String hash) throws Exception {
+        final Multihash filePointer = Multihash.fromBase58(hash);
+        final byte[] fileContents = ipfs.cat(filePointer);
+        log.info("Retreived IPFS data: " + new String(fileContents).substring(0, 100));
+        return new String(fileContents);
     }
 
 }

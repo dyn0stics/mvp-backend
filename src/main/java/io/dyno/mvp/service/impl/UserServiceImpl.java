@@ -31,13 +31,13 @@ import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -163,8 +163,8 @@ public class UserServiceImpl implements UserService {
     }
 
     private static Bytes32 stringToBytes32(String string) {
-        byte[] byteValue = string.getBytes();
-        byte[] byteValueLen32 = new byte[32];
+        final byte[] byteValue = string.getBytes();
+        final byte[] byteValueLen32 = new byte[32];
         System.arraycopy(byteValue, 0, byteValueLen32, 0, byteValue.length);
         return new Bytes32(byteValueLen32);
     }
@@ -174,26 +174,8 @@ public class UserServiceImpl implements UserService {
         return mapper.writeValueAsString(userProfile);
     }
 
-    private String getFile(final String fileName) {
-        final StringBuilder result = new StringBuilder("");
-        final ClassLoader classLoader = getClass().getClassLoader();
-        final File file = new File(classLoader.getResource(fileName).getFile());
-        try (Scanner scanner = new Scanner(file)) {
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                result.append(line).append("\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return result.toString();
-
-    }
-
     private static String readFileAsString(String fileName) throws Exception {
-        String data = "";
-        data = new String(Files.readAllBytes(Paths.get(fileName)));
-        return data;
+        return new String(Files.readAllBytes(Paths.get(fileName)));
     }
 
     private List<PurchaseOffer> fetchPurchaseOffersForAddress(final DynoMarket contract, final String address) throws Exception {
