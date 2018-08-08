@@ -11,4 +11,6 @@ public interface UserService {
     List<UserProfile> doSearch(final String param) throws Exception;
 
     UserProfile registerUser(String username, String age, String weight, String gender, String country) throws Exception;
+
+    String purchase(final String address, final String price, final String pk) throws Exception;
 }

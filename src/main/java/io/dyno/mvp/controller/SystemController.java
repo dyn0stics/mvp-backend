@@ -1,6 +1,5 @@
 package io.dyno.mvp.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dyno.mvp.model.UserProfile;
 import io.dyno.mvp.service.UserService;
 import io.ipfs.api.IPFS;
@@ -68,6 +67,15 @@ public class SystemController {
         final byte[] fileContents = ipfs.cat(filePointer);
         log.info("Retreived IPFS data: " + new String(fileContents).substring(0, 100));
         return new String(fileContents);
+    }
+
+    @RequestMapping(value = "/purchase")
+    @CrossOrigin
+    public String purchase(
+            @RequestParam(name = "address") final String address,
+            @RequestParam(name = "price") final String price,
+            @RequestParam(name = "pk") final String pk) throws Exception {
+        return userService.purchase(address, price, pk);
     }
 
 }

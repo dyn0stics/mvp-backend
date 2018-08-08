@@ -27,6 +27,8 @@ import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
+import org.web3j.protocol.core.methods.response.Transaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
@@ -89,16 +91,9 @@ public class UserServiceImpl implements UserService {
         data.setWorkoutData(workoutData);
         userProfile.setData(data);
         final byte[] payload = data.getWorkoutData().getBytes();
-        final ECKey ecKey = ECKey.fromPrivate(ecKeyPair.getPrivateKey());
-        final ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
-        byte[] cipher = new byte[0];
-        try {
-            cipher = ECIESCoder.encrypt(pubKeyPoint, payload);
-        } catch (Throwable e) {
-            log.error("Error during encryption: " + e.getMessage());
-        }
-        log.info("Workout data encrypted: " + Hex.toHexString(cipher).substring(0, 100));
-        data.setWorkoutData(Hex.toHexString(cipher));
+        final String cipher = encryptWithPublicKey(ecKeyPair, payload);
+        log.info("Workout data encrypted: " + cipher.substring(0, 100));
+        data.setWorkoutData(cipher);
         sendTokens(contract, credentials.getAddress(), BigInteger.valueOf(100L));
         // DEMO - method END (set initial account balance and 1 workout record)
 
@@ -162,11 +157,34 @@ public class UserServiceImpl implements UserService {
         return userProfiles;
     }
 
+    @Override
+    public String purchase(String address, String price, String pk) throws Exception {
+        final Credentials credentials = Credentials.create(pk);
+        final DynoMarket contract = DynoMarket.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
+        final String publicKey = credentials.getEcKeyPair().getPublicKey().toString();
+        log.info("Creating purchase for public key " + publicKey + " to address " + address);
+        final TransactionReceipt receipt = contract.createPurchaseOffer(address, publicKey.getBytes(), new BigInteger(price)).send();
+        log.info("Created transaction ID " + receipt.getTransactionHash());
+        return receipt.getTransactionHash();
+    }
+
     private static Bytes32 stringToBytes32(String string) {
         final byte[] byteValue = string.getBytes();
         final byte[] byteValueLen32 = new byte[32];
         System.arraycopy(byteValue, 0, byteValueLen32, 0, byteValue.length);
         return new Bytes32(byteValueLen32);
+    }
+
+    private String encryptWithPublicKey(ECKeyPair ecKeyPair, byte[] payload) {
+        final ECKey ecKey = ECKey.fromPrivate(ecKeyPair.getPrivateKey());
+        final ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
+        byte[] cipher = new byte[0];
+        try {
+            cipher = ECIESCoder.encrypt(pubKeyPoint, payload);
+        } catch (Throwable e) {
+            log.error("Error during encryption: " + e.getMessage());
+        }
+        return Hex.toHexString(cipher);
     }
 
     private String profile2Json(final UserProfile userProfile) throws JsonProcessingException {
