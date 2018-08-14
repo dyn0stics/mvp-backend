@@ -1,14 +1,16 @@
 package io.dyno.mvp.model;
 
+import java.math.BigInteger;
+
 public class PurchaseOffer {
 
     private String buyer;
     private String seller;
     private String buyerPublicKey;
-    private String amount;
+    private BigInteger amount;
     private String ipfs;
 
-    public PurchaseOffer(String buyer, String seller, String buyerPublicKey, String amount, String ipfs) {
+    public PurchaseOffer(String buyer, String seller, String buyerPublicKey, BigInteger amount, String ipfs) {
         this.buyer = buyer;
         this.seller = seller;
         this.buyerPublicKey = buyerPublicKey;
@@ -40,11 +42,11 @@ public class PurchaseOffer {
         this.buyerPublicKey = buyerPublicKey;
     }
 
-    public String getAmount() {
+    public BigInteger getAmount() {
         return amount;
     }
 
-    public void setAmount(String amount) {
+    public void setAmount(BigInteger amount) {
         this.amount = amount;
     }
 

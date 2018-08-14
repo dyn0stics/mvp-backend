@@ -26,8 +26,8 @@ import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.RemoteCall;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
-import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tx.Transfer;
@@ -131,7 +131,7 @@ public class UserServiceImpl implements UserService {
         }
         profile.getData().setWorkoutData(new String(payload)); // show decrypted data only for users with PK
         profile.setIpfsHash(NODE_IP + ":8080/ipfs/" + ipfsHash); //http://localhost:8080/ipfs/Qmcr5S89hSc5GLn6TJyHR2KCZ8DWucfSaHkAA6U8UEsMSW
-        profile.setPurchaseOffers(fetchPurchaseOffersForAddress(contract, profile.getAddress()));
+        profile.setPurchaseOffers(fetchPurchaseOffersForSellerAddress(contract, profile.getAddress()));
         profile.setBalance(fetchBalanceForAddress(contract, credentials, profile.getAddress()));
         return profile;
     }
@@ -168,6 +168,13 @@ public class UserServiceImpl implements UserService {
         return receipt.getTransactionHash();
     }
 
+    @Override
+    public List<PurchaseOffer> getOffersForBuyer(final String pk) throws Exception {
+        final Credentials credentials = Credentials.create(pk);
+        final DynoMarket contract = DynoMarket.load(CONTRACT_ADDRESS, web3j, credentials, new BigInteger(GAS_PRICE), new BigInteger(GAS_LIMIT));
+        return fetchPurchaseOffersForBuyerAddress(contract, credentials.getAddress());
+    }
+
     private static Bytes32 stringToBytes32(String string) {
         final byte[] byteValue = string.getBytes();
         final byte[] byteValueLen32 = new byte[32];
@@ -196,7 +203,7 @@ public class UserServiceImpl implements UserService {
         return new String(Files.readAllBytes(Paths.get(fileName)));
     }
 
-    private List<PurchaseOffer> fetchPurchaseOffersForAddress(final DynoMarket contract, final String address) throws Exception {
+    private List<PurchaseOffer> fetchPurchaseOffersForSellerAddress(final DynoMarket contract, final String address) throws Exception {
         final BigInteger count = contract.getOffersLength().send();
         final List<PurchaseOffer> offers = new ArrayList<>();
         for (BigInteger bi = BigInteger.valueOf(0);
@@ -205,7 +212,23 @@ public class UserServiceImpl implements UserService {
             log.info("Fetch offer index: " + bi);
             final Tuple5 offer = contract.getOfferByIndex(bi).send();
             if (offer.getValue2().equals(address)) {
-                offers.add(new PurchaseOffer((String) offer.getValue1(), (String) offer.getValue2(), (String) offer.getValue3(), (String) offer.getValue4(), (String) offer.getValue5()));
+                offers.add(new PurchaseOffer((String) offer.getValue1(), (String) offer.getValue2(), new String((byte[]) offer.getValue3()), (BigInteger) offer.getValue4(), new String((byte[]) offer.getValue5())));
+            }
+        }
+        log.info("Fetch offer complete.");
+        return offers;
+    }
+
+    private List<PurchaseOffer> fetchPurchaseOffersForBuyerAddress(final DynoMarket contract, final String address) throws Exception {
+        final BigInteger count = contract.getOffersLength().send();
+        final List<PurchaseOffer> offers = new ArrayList<>();
+        for (BigInteger bi = BigInteger.valueOf(0);
+             count.compareTo(bi) > 0;
+             bi = bi.add(BigInteger.ONE)) {
+            log.info("Fetch offer index: " + bi);
+            final Tuple5 offer = contract.getOfferByIndex(bi).send();
+            if (offer.getValue1().equals(address)) {
+                offers.add(new PurchaseOffer((String) offer.getValue1(), (String) offer.getValue2(), new String((byte[]) offer.getValue3()), (BigInteger) offer.getValue4(), new String((byte[]) offer.getValue5())));
             }
         }
         log.info("Fetch offer complete.");

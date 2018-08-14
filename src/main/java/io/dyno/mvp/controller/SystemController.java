@@ -1,5 +1,6 @@
 package io.dyno.mvp.controller;
 
+import io.dyno.mvp.model.PurchaseOffer;
 import io.dyno.mvp.model.UserProfile;
 import io.dyno.mvp.service.UserService;
 import io.ipfs.api.IPFS;
@@ -76,6 +77,12 @@ public class SystemController {
             @RequestParam(name = "price") final String price,
             @RequestParam(name = "pk") final String pk) throws Exception {
         return userService.purchase(address, price, pk);
+    }
+
+    @RequestMapping(value = "/customer/offers")
+    @CrossOrigin
+    public List<PurchaseOffer> getClientOffers(@RequestParam(name = "pk") final String pk) throws Exception {
+        return userService.getOffersForBuyer(pk);
     }
 
 }
